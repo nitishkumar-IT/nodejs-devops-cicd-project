@@ -44,20 +44,15 @@ pipeline {
                 ]) {
 
                     powershell '''
-                        $env:DOCKER_CONFIG = "$env:WORKSPACE\\.docker-config"
-
-                        New-Item `
-                            -ItemType Directory `
-                            -Force `
-                            -Path $env:DOCKER_CONFIG | Out-Null
-
-                        Write-Host "Docker context:"
+                        Write-Host "===== DOCKER CONTEXT ====="
                         & "$env:DOCKER_PATH" context show
 
-                        Write-Host "Docker username:"
+                        Write-Host ""
+                        Write-Host "===== DOCKER USER ====="
                         Write-Host "$env:DOCKER_USERNAME"
 
-                        Write-Host "Logging into Docker Hub..."
+                        Write-Host ""
+                        Write-Host "===== DOCKER LOGIN ====="
 
                         $env:DOCKER_PASSWORD | & "$env:DOCKER_PATH" login `
                             --username "$env:DOCKER_USERNAME" `
@@ -68,20 +63,24 @@ pipeline {
                             exit 1
                         }
 
-                        Write-Host "Docker Hub login SUCCESSFUL!"
+                        Write-Host "Docker Hub login successful!"
 
-                        Write-Host "Tagging image..."
+                        Write-Host ""
+                        Write-Host "===== TAG IMAGE ====="
 
                         & "$env:DOCKER_PATH" tag `
                             nodejs-devops-cicd-project:latest `
                             "$env:DOCKER_IMAGE`:latest"
 
                         if ($LASTEXITCODE -ne 0) {
-                            Write-Error "Docker image tagging failed."
+                            Write-Error "Docker image tag failed."
                             exit 1
                         }
 
-                        Write-Host "Pushing image to Docker Hub..."
+                        Write-Host "Image tagged successfully!"
+
+                        Write-Host ""
+                        Write-Host "===== PUSH IMAGE ====="
 
                         & "$env:DOCKER_PATH" push `
                             "$env:DOCKER_IMAGE`:latest"
@@ -91,7 +90,7 @@ pipeline {
                             exit 1
                         }
 
-                        Write-Host "Docker image PUSH SUCCESSFUL!"
+                        Write-Host "Docker image pushed successfully!"
                     '''
                 }
             }
