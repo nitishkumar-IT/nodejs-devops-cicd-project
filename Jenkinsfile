@@ -43,50 +43,33 @@ pipeline {
                     )
                 ]) {
 
-                    powershell '''
-                        Write-Host "===== Docker Context ====="
-                        & "$env:DOCKER_PATH" context show
+                    bat '''
+                        echo %DOCKER_PASSWORD% | "%DOCKER_PATH%" login --username %DOCKER_USERNAME% --password-stdin
 
-                        Write-Host ""
-                        Write-Host "===== Docker Login ====="
+                        if errorlevel 1 (
+                            echo Docker Hub login failed.
+                            exit /b 1
+                        )
 
-                        $DOCKER_PASSWORD | & "$env:DOCKER_PATH" login `
-                            --username "$DOCKER_USERNAME" `
-                            --password-stdin
+                        echo Docker Hub login successful.
 
-                        if ($LASTEXITCODE -ne 0) {
-                            Write-Error "Docker Hub login failed."
-                            exit 1
-                        }
+                        "%DOCKER_PATH%" tag nodejs-devops-cicd-project:latest %DOCKER_IMAGE%:latest
 
-                        Write-Host "Docker Hub login successful."
+                        if errorlevel 1 (
+                            echo Docker image tagging failed.
+                            exit /b 1
+                        )
 
-                        Write-Host ""
-                        Write-Host "===== Tag Image ====="
+                        echo Docker image tagged successfully.
 
-                        & "$env:DOCKER_PATH" tag `
-                            nodejs-devops-cicd-project:latest `
-                            "$env:DOCKER_IMAGE`:latest"
+                        "%DOCKER_PATH%" push %DOCKER_IMAGE%:latest
 
-                        if ($LASTEXITCODE -ne 0) {
-                            Write-Error "Docker tag failed."
-                            exit 1
-                        }
+                        if errorlevel 1 (
+                            echo Docker image push failed.
+                            exit /b 1
+                        )
 
-                        Write-Host "Docker image tagged."
-
-                        Write-Host ""
-                        Write-Host "===== Push Image ====="
-
-                        & "$env:DOCKER_PATH" push `
-                            "$env:DOCKER_IMAGE`:latest"
-
-                        if ($LASTEXITCODE -ne 0) {
-                            Write-Error "Docker push failed."
-                            exit 1
-                        }
-
-                        Write-Host "Docker image pushed successfully."
+                        echo Docker image pushed successfully.
                     '''
                 }
             }
