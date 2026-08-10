@@ -25,12 +25,22 @@ pipeline {
                 bat 'docker build -t nodejs-devops-cicd-project .'
             }
         }
+
+        stage('Deploy with Docker Compose') {
+            steps {
+                bat '''
+                    docker-compose down
+                    docker-compose up -d
+                '''
+            }
+        }
     }
 
     post {
         success {
-            echo 'Node.js CI pipeline completed successfully!'
+            echo 'Node.js CI/CD pipeline completed successfully!'
         }
+
         failure {
             echo 'Pipeline failed.'
         }
