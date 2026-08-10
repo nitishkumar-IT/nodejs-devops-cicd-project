@@ -44,13 +44,21 @@ pipeline {
                 ]) {
 
                     bat '''
-                        echo %DOCKER_PASSWORD% | "%DOCKER_PATH%" login --username %DOCKER_USERNAME% --password-stdin
+                        echo Logging in as: %DOCKER_USERNAME%
+
+                        REM Write password to a temp file without a trailing newline,
+                        REM avoids the echo/stdin newline issue on Windows
+                        powershell -NoProfile -Command "[System.IO.File]::WriteAllText('%WORKSPACE%\\docker_pass.txt', $env:DOCKER_PASSWORD)"
+
+                        type "%WORKSPACE%\\docker_pass.txt" | "%DOCKER_PATH%" login --username %DOCKER_USERNAME% --password-stdin
 
                         if errorlevel 1 (
+                            del "%WORKSPACE%\\docker_pass.txt"
                             echo Docker Hub login failed.
                             exit /b 1
                         )
 
+                        del "%WORKSPACE%\\docker_pass.txt"
                         echo Docker Hub login successful.
 
                         "%DOCKER_PATH%" tag nodejs-devops-cicd-project:latest %DOCKER_IMAGE%:latest
@@ -90,6 +98,10 @@ pipeline {
 
         failure {
             echo 'Pipeline failed.'
+        }
+        always {
+            // safety net in case the temp file was left behind by an earlier failure
+            bat 'if exist "%WORKSPACE%\\docker_pass.txt" del "%WORKSPACE%\\docker_pass.txt"'
         }
     }
 }
