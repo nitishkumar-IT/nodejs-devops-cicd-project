@@ -22,15 +22,15 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                bat 'docker build -t nodejs-devops-cicd-project .'
+                bat '"C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" build -t nodejs-devops-cicd-project .'
             }
         }
 
         stage('Deploy with Docker Compose') {
             steps {
                 bat '''
-                    docker-compose down
-                    docker-compose up -d
+                "C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker-compose.exe" down
+                "C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker-compose.exe" up -d
                 '''
             }
         }
