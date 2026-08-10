@@ -4,7 +4,6 @@ pipeline {
     environment {
         DOCKER_PATH = 'C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
         COMPOSE_PATH = 'C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker-compose.exe'
-        DOCKER_USERNAME = 'nitishkumar102001'
         DOCKER_IMAGE = 'nitishkumar102001/nodejs-devops-cicd-project'
     }
 
@@ -38,14 +37,14 @@ pipeline {
             steps {
                 withCredentials([
                     usernamePassword(
-                        credentialsId: 'dockerhub-token',
-                        usernameVariable: 'JENKINS_DOCKER_USERNAME',
-                        passwordVariable: 'JENKINS_DOCKER_TOKEN'
+                        credentialsId: 'dockerhub-pat-test',
+                        usernameVariable: 'DOCKER_USERNAME',
+                        passwordVariable: 'DOCKER_PASSWORD'
                     )
                 ]) {
 
                     bat '''
-                        echo %JENKINS_DOCKER_TOKEN% | "%DOCKER_PATH%" login --username %JENKINS_DOCKER_USERNAME% --password-stdin
+                        echo %DOCKER_PASSWORD% | "%DOCKER_PATH%" login --username %DOCKER_USERNAME% --password-stdin
                     '''
 
                     bat '''
@@ -62,6 +61,7 @@ pipeline {
         stage('Deploy with Docker Compose') {
             steps {
                 bat '"%COMPOSE_PATH%" down'
+
                 bat '"%COMPOSE_PATH%" up -d'
             }
         }
