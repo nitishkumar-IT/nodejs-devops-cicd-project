@@ -36,10 +36,13 @@ pipeline {
                         passwordVariable: 'DOCKER_PASSWORD'
                     )
                 ]) {
-                    bat 'echo %DOCKER_PASSWORD% | "C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" login -u %DOCKER_USERNAME% --password-stdin'
-                    
+
+                    powershell '''
+                        $env:DOCKER_PASSWORD | & "C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" login -u $env:DOCKER_USERNAME --password-stdin
+                    '''
+
                     bat '"C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" tag nodejs-devops-cicd-project:latest %DOCKER_USERNAME%/nodejs-devops-cicd-project:latest'
-                    
+
                     bat '"C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" push %DOCKER_USERNAME%/nodejs-devops-cicd-project:latest'
                 }
             }
@@ -48,7 +51,7 @@ pipeline {
         stage('Deploy with Docker Compose') {
             steps {
                 bat '"C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker-compose.exe" down'
-                
+
                 bat '"C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker-compose.exe" up -d'
             }
         }
@@ -60,7 +63,7 @@ pipeline {
         }
 
         failure {
-            echo 'Pipeline fail.'
+            echo 'Pipeline failed.'
         }
     }
 }
