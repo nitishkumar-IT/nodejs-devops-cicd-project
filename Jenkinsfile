@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     stages {
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -26,24 +27,40 @@ pipeline {
             }
         }
 
+        stage('Push to Docker Hub') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-credentials',
+                        usernameVariable: 'DOCKER_USERNAME',
+                        passwordVariable: 'DOCKER_PASSWORD'
+                    )
+                ]) {
+                    bat 'echo %DOCKER_PASSWORD% | "C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" login -u %DOCKER_USERNAME% --password-stdin'
+                    
+                    bat '"C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" tag nodejs-devops-cicd-project:latest %DOCKER_USERNAME%/nodejs-devops-cicd-project:latest'
+                    
+                    bat '"C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" push %DOCKER_USERNAME%/nodejs-devops-cicd-project:latest'
+                }
+            }
+        }
+
         stage('Deploy with Docker Compose') {
             steps {
-                bat '''
-                "C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker-compose.exe" down
-                "C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" rm -f nodejs-devops-container || exit 0
-                "C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker-compose.exe" up -d
-                '''
+                bat '"C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker-compose.exe" down'
+                
+                bat '"C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker-compose.exe" up -d'
             }
         }
     }
 
     post {
         success {
-            echo 'Node.js CI/CD pipeline completed successfully! '
+            echo 'Node.js CI/CD pipeline completed successfully!'
         }
 
         failure {
-            echo 'Pipeline failed not working.'
+            echo 'Pipeline failed.'
         }
     }
 }
