@@ -1,5 +1,12 @@
-pipeline {
+\pipeline {
     agent any
+
+    environment {
+        DOCKER_PATH = 'C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
+        COMPOSE_PATH = 'C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker-compose.exe'
+        DOCKER_USERNAME = 'nitishkumar102001'
+        DOCKER_IMAGE = 'nitishkumar102001/nodejs-devops-cicd-project'
+    }
 
     stages {
 
@@ -23,53 +30,39 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                bat '"C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" build -t nodejs-devops-cicd-project .'
+                bat '"%DOCKER_PATH%" build -t nodejs-devops-cicd-project:latest .'
             }
         }
 
         stage('Push to Docker Hub') {
-    steps {
-        withCredentials([
-            usernamePassword(
-                credentialsId: 'dockerhub-token',
-                usernameVariable: 'DOCKER_USERNAME',
-                passwordVariable: 'DOCKER_PASSWORD'
-            )
-        ]) {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-token',
+                        usernameVariable: 'JENKINS_DOCKER_USERNAME',
+                        passwordVariable: 'JENKINS_DOCKER_TOKEN'
+                    )
+                ]) {
 
-            powershell '''
-                Write-Host "Docker username from Jenkins: $env:DOCKER_USERNAME"
-                Write-Host "Docker token length: $($env:DOCKER_PASSWORD.Length)"
+                    bat '''
+                        echo %JENKINS_DOCKER_TOKEN% | "%DOCKER_PATH%" login --username %JENKINS_DOCKER_USERNAME% --password-stdin
+                    '''
 
-                if ([string]::IsNullOrEmpty($env:DOCKER_PASSWORD)) {
-                    Write-Error "Docker password/token is EMPTY"
-                    exit 1
+                    bat '''
+                        "%DOCKER_PATH%" tag nodejs-devops-cicd-project:latest "%DOCKER_IMAGE%:latest"
+                    '''
+
+                    bat '''
+                        "%DOCKER_PATH%" push "%DOCKER_IMAGE%:latest"
+                    '''
                 }
-
-                Write-Host "Attempting Docker Hub login..."
-
-                $env:DOCKER_PASSWORD | & "C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" login -u $env:DOCKER_USERNAME --password-stdin
-
-                if ($LASTEXITCODE -ne 0) {
-                    Write-Error "Docker Hub login failed"
-                    exit $LASTEXITCODE
-                }
-
-                Write-Host "Docker Hub login successful"
-            '''
-
-            bat '"C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" tag nodejs-devops-cicd-project:latest %DOCKER_USERNAME%/nodejs-devops-cicd-project:latest'
-
-            bat '"C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" push %DOCKER_USERNAME%/nodejs-devops-cicd-project:latest'
+            }
         }
-    }
-}
 
         stage('Deploy with Docker Compose') {
             steps {
-                bat '"C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker-compose.exe" down'
-
-                bat '"C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker-compose.exe" up -d'
+                bat '"%COMPOSE_PATH%" down'
+                bat '"%COMPOSE_PATH%" up -d'
             }
         }
     }
