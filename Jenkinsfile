@@ -3,97 +3,33 @@ pipeline {
 
     environment {
         DOCKER_PATH = 'C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
-        COMPOSE_PATH = 'C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker-compose.exe'
-        DOCKER_IMAGE = 'nitishkumar102001/nodejs-devops-cicd-project'
     }
 
     stages {
 
-        stage('Checkout') {
+        stage('Docker Diagnostic') {
             steps {
-                checkout scm
+                powershell '''
+                    Write-Host "===== USER ====="
+                    whoami
+
+                    Write-Host ""
+                    Write-Host "===== DOCKER VERSION ====="
+                    & "$env:DOCKER_PATH" version
+
+                    Write-Host ""
+                    Write-Host "===== DOCKER CONTEXT ====="
+                    & "$env:DOCKER_PATH" context show
+
+                    Write-Host ""
+                    Write-Host "===== DOCKER SERVER ====="
+                    & "$env:DOCKER_PATH" info --format "{{.ServerVersion}}"
+
+                    Write-Host ""
+                    Write-Host "===== DOCKER HOST ====="
+                    Write-Host "DOCKER_HOST = $env:DOCKER_HOST"
+                '''
             }
-        }
-
-        stage('Install Dependencies') {
-            steps {
-                bat 'npm install'
-            }
-        }
-
-        stage('Test') {
-            steps {
-                bat 'npm test'
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                bat '"%DOCKER_PATH%" build -t nodejs-devops-cicd-project:latest .'
-            }
-        }
-
-        stage('Docker Hub Login Diagnostic') {
-            steps {
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'dockerhub-pat-test',
-                        usernameVariable: 'DOCKER_USERNAME',
-                        passwordVariable: 'DOCKER_PASSWORD'
-                    )
-                ]) {
-                    powershell '''
-                        Write-Host "=========================================="
-                        Write-Host "Docker executable:"
-                        & "$env:DOCKER_PATH" --version
-
-                        Write-Host ""
-                        Write-Host "Docker config environment:"
-                        Write-Host "DOCKER_CONFIG = $env:DOCKER_CONFIG"
-
-                        Write-Host ""
-                        Write-Host "Creating clean Docker configuration..."
-
-                        $env:DOCKER_CONFIG = "$env:WORKSPACE\\.docker-config"
-
-                        New-Item -ItemType Directory -Force -Path $env:DOCKER_CONFIG | Out-Null
-
-                        Write-Host "DOCKER_CONFIG = $env:DOCKER_CONFIG"
-
-                        Write-Host ""
-                        Write-Host "Attempting Docker Hub login..."
-
-                        $env:DOCKER_PASSWORD | & "$env:DOCKER_PATH" login --username "$env:DOCKER_USERNAME" --password-stdin
-
-                        if ($LASTEXITCODE -ne 0) {
-                            Write-Error "Docker Hub login failed with exit code $LASTEXITCODE"
-                            exit 1
-                        }
-
-                        Write-Host ""
-                        Write-Host "=========================================="
-                        Write-Host "Docker Hub login succeeded!"
-                        Write-Host "=========================================="
-                    '''
-                }
-            }
-        }
-
-        stage('Deploy with Docker Compose') {
-            steps {
-                bat '"%COMPOSE_PATH%" down'
-                bat '"%COMPOSE_PATH%" up -d'
-            }
-        }
-    }
-
-    post {
-        success {
-            echo 'Node.js CI/CD pipeline completed successfully!'
-        }
-
-        failure {
-            echo 'Pipeline failed.'
         }
     }
 }
