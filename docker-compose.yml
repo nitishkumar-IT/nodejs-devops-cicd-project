@@ -1,7 +1,7 @@
 services:
-  nextwork-app:
+  nodejs-app:
     build: .
-    container_name: nextwork-node-app
+    container_name: nodejs-devops-container
     ports:
-      - "3000:3000"
+      - "3001:3001"
     restart: unless-stopped
