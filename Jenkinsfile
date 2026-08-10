@@ -39,11 +39,11 @@ pipeline {
 
     post {
         success {
-            echo 'Node.js CI/CD pipeline completed successfully!'
+            echo 'Node.js CI/CD pipeline completed successfully! '
         }
 
         failure {
-            echo 'Pipeline failed.'
+            echo 'Pipeline failed not working.'
         }
     }
 }
