@@ -11,7 +11,7 @@ app.use(express.json());
 
 const portfolio = {
   name: "Nitishkumar Dharmendran",
-  title: "AWS Cloud & DevOps Engineer",
+  title: "AWS Cloud & DevOps Engineer | CI/CD Enthusiast",
   location: "Mumbai, Maharashtra, India",
 
   summary:
