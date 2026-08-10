@@ -1,4 +1,4 @@
-# NextWork Node.js DevOps Project
+# Node.js DevOps Project
 
 A second hands-on DevOps project using Node.js instead of Java/Tomcat.
 
