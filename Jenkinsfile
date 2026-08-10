@@ -33,7 +33,7 @@ pipeline {
             }
         }
 
-        stage('Docker Credential Test') {
+        stage('Push to Docker Hub') {
     steps {
         withCredentials([
             usernamePassword(
@@ -42,15 +42,17 @@ pipeline {
                 passwordVariable: 'DOCKER_PASSWORD'
             )
         ]) {
-            powershell '''
-                $bytes = [System.Text.Encoding]::UTF8.GetBytes($env:DOCKER_PASSWORD)
-                $sha = [System.Security.Cryptography.SHA256]::Create()
-                $hash = $sha.ComputeHash($bytes)
-                $result = [BitConverter]::ToString($hash).Replace("-", "").ToLower()
 
-                Write-Host "Username: $env:DOCKER_USERNAME"
-                Write-Host "Token length: $($env:DOCKER_PASSWORD.Length)"
-                Write-Host "Token SHA256: $result"
+            bat '''
+                echo %DOCKER_PASSWORD% | "%DOCKER_PATH%" login --username %DOCKER_USERNAME% --password-stdin
+            '''
+
+            bat '''
+                "%DOCKER_PATH%" tag nodejs-devops-cicd-project:latest "%DOCKER_IMAGE%:latest"
+            '''
+
+            bat '''
+                "%DOCKER_PATH%" push "%DOCKER_IMAGE%:latest"
             '''
         }
     }
