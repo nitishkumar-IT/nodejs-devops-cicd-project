@@ -33,30 +33,28 @@ pipeline {
             }
         }
 
-        stage('Push to Docker Hub') {
-            steps {
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'dockerhub-pat-test',
-                        usernameVariable: 'DOCKER_USERNAME',
-                        passwordVariable: 'DOCKER_PASSWORD'
-                    )
-                ]) {
+        stage('Docker Credential Test') {
+    steps {
+        withCredentials([
+            usernamePassword(
+                credentialsId: 'dockerhub-final',
+                usernameVariable: 'DOCKER_USERNAME',
+                passwordVariable: 'DOCKER_PASSWORD'
+            )
+        ]) {
+            powershell '''
+                $bytes = [System.Text.Encoding]::UTF8.GetBytes($env:DOCKER_PASSWORD)
+                $sha = [System.Security.Cryptography.SHA256]::Create()
+                $hash = $sha.ComputeHash($bytes)
+                $result = [BitConverter]::ToString($hash).Replace("-", "").ToLower()
 
-                    bat '''
-                        echo %DOCKER_PASSWORD% | "%DOCKER_PATH%" login --username %DOCKER_USERNAME% --password-stdin
-                    '''
-
-                    bat '''
-                        "%DOCKER_PATH%" tag nodejs-devops-cicd-project:latest "%DOCKER_IMAGE%:latest"
-                    '''
-
-                    bat '''
-                        "%DOCKER_PATH%" push "%DOCKER_IMAGE%:latest"
-                    '''
-                }
-            }
+                Write-Host "Username: $env:DOCKER_USERNAME"
+                Write-Host "Token length: $($env:DOCKER_PASSWORD.Length)"
+                Write-Host "Token SHA256: $result"
+            '''
         }
+    }
+}
 
         stage('Deploy with Docker Compose') {
             steps {
