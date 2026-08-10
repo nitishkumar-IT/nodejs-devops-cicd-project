@@ -60,7 +60,7 @@ pipeline {
         }
 
         failure {
-            echo 'Pipeline failed Making.'
+            echo 'Pipeline fail.'
         }
     }
 }
