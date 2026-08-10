@@ -8,7 +8,7 @@ app.get("/", (req, res) => {
     <!DOCTYPE html>
     <html>
       <head>
-        <title>NextWork Node DevOps Project</title>
+        <title>Node DevOps Project</title>
         <style>
           body { font-family: Arial, sans-serif; max-width: 800px; margin: 80px auto; padding: 20px; }
           .card { padding: 20px; border: 1px solid #ddd; border-radius: 10px; }

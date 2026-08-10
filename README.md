@@ -17,8 +17,8 @@ Health check: http://localhost:3000/health
 
 ## Docker
 
-docker build -t nextwork-node-devops-project .
-docker run -d --name nextwork-node-app -p 3000:3000 nextwork-node-devops-project
+docker build -t node-devops-project .
+docker run -d --name node-app -p 3000:3000 node-devops-project
 
 ## Compose
 

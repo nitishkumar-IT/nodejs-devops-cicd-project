@@ -22,7 +22,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                bat 'docker build -t nextwork-node-devops-project .'
+                bat 'docker build -t nodejs-devops-cicd-project .'
             }
         }
     }

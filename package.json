@@ -1,5 +1,5 @@
 {
-  "name": "nextwork-node-devops-project",
+  "name": "nodejs-devops-cicd-project",
   "version": "1.0.0",
   "description": "Node.js web application for an end-to-end DevOps hands-on project",
   "main": "app.js",
