@@ -1,6 +1,6 @@
 services:
   nodejs-app:
-    build: .
+    image: nodejs-devops-cicd-project:latest
     container_name: nodejs-devops-container
     ports:
       - "3001:3001"
