@@ -1,0 +1,13 @@
+{
+  "name": "nextwork-node-devops-project",
+  "version": "1.0.0",
+  "description": "Node.js web application for an end-to-end DevOps hands-on project",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
