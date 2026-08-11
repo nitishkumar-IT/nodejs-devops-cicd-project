@@ -15,7 +15,7 @@ app.get("/", (req, res) => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <title>Node.js DevOps CI/CD </title>
-    <h1>Nitishkumar Dharmendran</h1>
+    
 
     <style>
         * {
@@ -294,7 +294,7 @@ app.get("/", (req, res) => {
             🚀 CI/CD Pipeline Successfully Deployed
         </div>
 
-        <h1>
+        <h1> Nitishkumar Dharmendran
             Node.js DevOps<br>
             CI/CD Project
         </h1>
