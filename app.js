@@ -4,1258 +4,477 @@ const app = express();
 
 const PORT = process.env.PORT || 3001;
 
-app.use(express.json());
-
-const portfolio = {
-    name: "Nitishkumar Dharmendran",
-    role: "AWS Cloud & DevOps Engineer",
-    location: "Mumbai, Maharashtra, India",
-
-    introduction:
-        "I build, containerize, test and deploy applications using AWS, Docker, Jenkins and modern CI/CD practices.",
-
-    skills: {
-        cloud: [
-            "AWS",
-            "EC2",
-            "S3",
-            "IAM",
-            "VPC",
-            "EBS",
-            "RDS",
-            "Lambda",
-            "CloudWatch",
-            "CloudFront",
-            "Route 53",
-            "Auto Scaling",
-            "Elastic Load Balancing"
-        ],
-
-        devops: [
-            "Jenkins",
-            "Docker",
-            "Docker Compose",
-            "Git",
-            "GitHub",
-            "CI/CD",
-            "Terraform",
-            "CloudFormation"
-        ],
-
-        development: [
-            "Node.js",
-            "Express.js",
-            "JavaScript",
-            "Java",
-            "Python",
-            "SQL",
-            "Maven"
-        ],
-
-        systems: [
-            "Linux",
-            "Ubuntu",
-            "Windows",
-            "SSH",
-            "Networking"
-        ]
-    },
-
-    projects: [
-        {
-            title: "Node.js CI/CD Pipeline",
-            description:
-                "Built a complete CI/CD pipeline using GitHub, Jenkins, Docker and Docker Compose. GitHub pushes automatically trigger Jenkins through a webhook.",
-            technologies:
-                "Node.js • Express • GitHub • Jenkins • Docker • Docker Compose"
-        },
-
-        {
-            title: "Dockerized Portfolio",
-            description:
-                "Containerized a Node.js portfolio application and deployed it using Docker with port mapping and container management.",
-            technologies:
-                "Node.js • Docker • Dockerfile • Docker Compose"
-        },
-
-        {
-            title: "AWS Cloud Deployment",
-            description:
-                "Worked with AWS cloud infrastructure concepts including EC2, IAM, VPC, S3, security groups and cloud deployment practices.",
-            technologies:
-                "AWS • EC2 • IAM • VPC • S3 • CloudWatch"
-        },
-
-        {
-            title: "Infrastructure Automation",
-            description:
-                "Explored Infrastructure as Code and automated cloud infrastructure provisioning using Terraform and AWS CloudFormation.",
-            technologies:
-                "Terraform • CloudFormation • AWS"
-        }
-    ],
-
-    certification: "AWS Certified Cloud Practitioner",
-
-    pipeline: [
-        "Developer",
-        "Git",
-        "GitHub",
-        "Webhook",
-        "Jenkins",
-        "npm Test",
-        "Docker Build",
-        "Docker Compose",
-        "Deployment"
-    ]
-};
-
-
-/* ==========================================
-   HEALTH CHECK
-========================================== */
-
-app.get("/health", (req, res) => {
-
-    res.status(200).json({
-        status: "UP",
-        application: "Nitishkumar DevOps Portfolio",
-        version: "2.0.0",
-        environment: process.env.NODE_ENV || "development",
-        timestamp: new Date().toISOString()
-    });
-
-});
-
-
-/* ==========================================
-   PORTFOLIO API
-========================================== */
-
-app.get("/api/portfolio", (req, res) => {
-
-    res.json(portfolio);
-
-});
-
-
-/* ==========================================
-   SKILLS API
-========================================== */
-
-app.get("/api/skills", (req, res) => {
-
-    res.json(portfolio.skills);
-
-});
-
-
-/* ==========================================
-   PROJECTS API
-========================================== */
-
-app.get("/api/projects", (req, res) => {
-
-    res.json(portfolio.projects);
-
-});
-
-
-/* ==========================================
-   MAIN PORTFOLIO WEBSITE
-========================================== */
+const startTime = new Date();
 
 app.get("/", (req, res) => {
-
-    const projectCards = portfolio.projects
-        .map(
-            (project, index) => `
-                <div class="project-card">
-
-                    <div class="project-number">
-                        0${index + 1}
-                    </div>
-
-                    <h3>
-                        ${project.title}
-                    </h3>
-
-                    <p>
-                        ${project.description}
-                    </p>
-
-                    <div class="technology">
-                        ${project.technologies}
-                    </div>
-
-                </div>
-            `
-        )
-        .join("");
-
-
-    const skillSections = Object.entries(portfolio.skills)
-        .map(
-            ([category, skills]) => `
-                <div class="skill-group">
-
-                    <h3>
-                        ${category.toUpperCase()}
-                    </h3>
-
-                    <div class="skill-list">
-
-                        ${skills
-                            .map(
-                                skill =>
-                                    `<span>${skill}</span>`
-                            )
-                            .join("")}
-
-                    </div>
-
-                </div>
-            `
-        )
-        .join("");
-
-
-    const pipelineSteps = portfolio.pipeline
-        .map(
-            (step, index) => `
-                <div class="pipeline-step">
-
-                    <div class="pipeline-number">
-                        ${index + 1}
-                    </div>
-
-                    <div>
-                        ${step}
-                    </div>
-
-                </div>
-            `
-        )
-        .join("");
-
-
     res.send(`
-
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-
-<meta charset="UTF-8">
-
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
->
-
-<title>
-    ${portfolio.name} | DevOps Portfolio
-</title>
-
-
-<style>
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-
-html {
-    scroll-behavior: smooth;
-}
-
-
-body {
-
-    font-family:
-        Arial,
-        Helvetica,
-        sans-serif;
-
-    background: #07111f;
-
-    color: #e5e7eb;
-
-    line-height: 1.6;
-
-}
-
-
-/* ==============================
-   NAVIGATION
-============================== */
-
-nav {
-
-    position: sticky;
-
-    top: 0;
-
-    z-index: 1000;
-
-    background: #07111f;
-
-    border-bottom:
-        1px solid #1e293b;
-
-}
-
-
-.nav-container {
-
-    max-width: 1150px;
-
-    width: 90%;
-
-    margin: auto;
-
-    min-height: 70px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-}
-
-
-.logo {
-
-    font-size: 25px;
-
-    font-weight: bold;
-
-    color: #38bdf8;
-
-}
-
-
-.nav-links {
-
-    list-style: none;
-
-    display: flex;
-
-    gap: 25px;
-
-}
-
-
-.nav-links a {
-
-    color: #cbd5e1;
-
-    text-decoration: none;
-
-    font-size: 14px;
-
-}
-
-
-.nav-links a:hover {
-
-    color: #38bdf8;
-
-}
-
-
-/* ==============================
-   COMMON
-============================== */
-
-.container {
-
-    width: 90%;
-
-    max-width: 1150px;
-
-    margin: auto;
-
-}
-
-
-section {
-
-    padding: 90px 0;
-
-}
-
-
-.section-title {
-
-    font-size: 40px;
-
-    margin-bottom: 10px;
-
-}
-
-
-.section-description {
-
-    color: #94a3b8;
-
-    margin-bottom: 40px;
-
-}
-
-
-/* ==============================
-   HERO
-============================== */
-
-.hero {
-
-    min-height: 90vh;
-
-    display: flex;
-
-    align-items: center;
-
-}
-
-
-.hero-content {
-
-    max-width: 850px;
-
-}
-
-
-.version {
-
-    display: inline-block;
-
-    padding: 7px 14px;
-
-    border: 1px solid #334155;
-
-    border-radius: 20px;
-
-    color: #38bdf8;
-
-    margin-bottom: 20px;
-
-    font-size: 13px;
-
-}
-
-
-.hero h1 {
-
-    font-size:
-        clamp(45px, 8vw, 80px);
-
-    line-height: 1.05;
-
-    margin-bottom: 20px;
-
-}
-
-
-.hero h1 span {
-
-    color: #38bdf8;
-
-}
-
-
-.hero h2 {
-
-    font-size: 25px;
-
-    color: #94a3b8;
-
-    margin-bottom: 20px;
-
-}
-
-
-.hero p {
-
-    font-size: 18px;
-
-    color: #cbd5e1;
-
-    max-width: 750px;
-
-    margin-bottom: 30px;
-
-}
-
-
-.buttons {
-
-    display: flex;
-
-    gap: 15px;
-
-    flex-wrap: wrap;
-
-}
-
-
-.button {
-
-    display: inline-block;
-
-    padding: 12px 22px;
-
-    border-radius: 8px;
-
-    text-decoration: none;
-
-    font-weight: bold;
-
-}
-
-
-.primary {
-
-    background: #38bdf8;
-
-    color: #07111f;
-
-}
-
-
-.secondary {
-
-    border: 1px solid #475569;
-
-    color: #e2e8f0;
-
-}
-
-
-/* ==============================
-   ABOUT
-============================== */
-
-.about-grid {
-
-    display: grid;
-
-    grid-template-columns:
-        repeat(
-            auto-fit,
-            minmax(280px, 1fr)
-        );
-
-    gap: 25px;
-
-}
-
-
-.about-card {
-
-    background: #0f172a;
-
-    border: 1px solid #1e293b;
-
-    padding: 30px;
-
-    border-radius: 14px;
-
-}
-
-
-.about-card h3 {
-
-    color: #38bdf8;
-
-    margin-bottom: 12px;
-
-}
-
-
-.about-card p {
-
-    color: #cbd5e1;
-
-}
-
-
-/* ==============================
-   SKILLS
-============================== */
-
-.skills-grid {
-
-    display: grid;
-
-    grid-template-columns:
-        repeat(
-            auto-fit,
-            minmax(280px, 1fr)
-        );
-
-    gap: 20px;
-
-}
-
-
-.skill-group {
-
-    background: #0f172a;
-
-    border: 1px solid #1e293b;
-
-    border-radius: 12px;
-
-    padding: 25px;
-
-}
-
-
-.skill-group h3 {
-
-    color: #38bdf8;
-
-    margin-bottom: 15px;
-
-}
-
-
-.skill-list {
-
-    display: flex;
-
-    flex-wrap: wrap;
-
-    gap: 8px;
-
-}
-
-
-.skill-list span {
-
-    background: #1e293b;
-
-    padding: 6px 10px;
-
-    border-radius: 6px;
-
-    color: #cbd5e1;
-
-    font-size: 13px;
-
-}
-
-
-/* ==============================
-   PROJECTS
-============================== */
-
-.project-grid {
-
-    display: grid;
-
-    grid-template-columns:
-        repeat(
-            auto-fit,
-            minmax(280px, 1fr)
-        );
-
-    gap: 25px;
-
-}
-
-
-.project-card {
-
-    background: #0f172a;
-
-    border: 1px solid #1e293b;
-
-    border-radius: 14px;
-
-    padding: 30px;
-
-}
-
-
-.project-number {
-
-    color: #38bdf8;
-
-    font-size: 14px;
-
-    margin-bottom: 10px;
-
-}
-
-
-.project-card h3 {
-
-    font-size: 22px;
-
-    margin-bottom: 12px;
-
-}
-
-
-.project-card p {
-
-    color: #94a3b8;
-
-    margin-bottom: 20px;
-
-}
-
-
-.technology {
-
-    color: #7dd3fc;
-
-    font-size: 13px;
-
-}
-
-
-/* ==============================
-   CERTIFICATION
-============================== */
-
-.certification {
-
-    background: #0f172a;
-
-}
-
-
-.certification-card {
-
-    max-width: 700px;
-
-    background: #111827;
-
-    border: 1px solid #334155;
-
-    padding: 35px;
-
-    border-radius: 15px;
-
-}
-
-
-.certification-card h3 {
-
-    color: #38bdf8;
-
-    font-size: 25px;
-
-    margin-bottom: 10px;
-
-}
-
-
-.certification-card p {
-
-    color: #cbd5e1;
-
-}
-
-
-/* ==============================
-   PIPELINE
-============================== */
-
-.pipeline {
-
-    display: grid;
-
-    grid-template-columns:
-        repeat(
-            auto-fit,
-            minmax(140px, 1fr)
-        );
-
-    gap: 15px;
-
-}
-
-
-.pipeline-step {
-
-    background: #0f172a;
-
-    border: 1px solid #1e293b;
-
-    border-radius: 10px;
-
-    padding: 20px;
-
-    text-align: center;
-
-    color: #cbd5e1;
-
-}
-
-
-.pipeline-number {
-
-    width: 35px;
-
-    height: 35px;
-
-    margin:
-        0 auto 10px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    border-radius: 50%;
-
-    background: #38bdf8;
-
-    color: #07111f;
-
-    font-weight: bold;
-
-}
-
-
-/* ==============================
-   CONTACT
-============================== */
-
-.contact {
-
-    text-align: center;
-
-}
-
-
-.contact-box {
-
-    max-width: 700px;
-
-    margin: auto;
-
-    background: #0f172a;
-
-    border: 1px solid #1e293b;
-
-    border-radius: 15px;
-
-    padding: 40px;
-
-}
-
-
-.contact-box p {
-
-    color: #94a3b8;
-
-    margin-bottom: 25px;
-
-}
-
-
-/* ==============================
-   FOOTER
-============================== */
-
-footer {
-
-    text-align: center;
-
-    padding: 30px;
-
-    border-top:
-        1px solid #1e293b;
-
-    color: #64748b;
-
-    font-size: 13px;
-
-}
-
-
-/* ==============================
-   MOBILE
-============================== */
-
-@media (max-width: 700px) {
-
-    .nav-links {
-
-        display: none;
-
-    }
-
-    section {
-
-        padding: 65px 0;
-
-    }
-
-}
-
-</style>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Node.js DevOps CI/CD</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background:
+                radial-gradient(circle at top left, #1e3a8a 0%, transparent 35%),
+                radial-gradient(circle at bottom right, #312e81 0%, transparent 35%),
+                #080b16;
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1100px;
+            margin: auto;
+            padding: 40px 0;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 60px;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .logo span {
+            color: #60a5fa;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            border-radius: 30px;
+            background: rgba(34, 197, 94, 0.12);
+            border: 1px solid rgba(34, 197, 94, 0.35);
+            color: #4ade80;
+            font-size: 14px;
+        }
+
+        .dot {
+            width: 9px;
+            height: 9px;
+            background: #4ade80;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #4ade80;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 30px;
+            background: rgba(96, 165, 250, 0.12);
+            border: 1px solid rgba(96, 165, 250, 0.3);
+            color: #93c5fd;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            font-size: clamp(42px, 7vw, 78px);
+            line-height: 1.05;
+            margin-bottom: 20px;
+            background: linear-gradient(
+                90deg,
+                #ffffff,
+                #60a5fa,
+                #a78bfa
+            );
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 18px;
+            max-width: 700px;
+            margin: auto;
+            line-height: 1.7;
+        }
+
+        .buttons {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .button {
+            text-decoration: none;
+            color: white;
+            padding: 12px 22px;
+            border-radius: 10px;
+            background: #2563eb;
+            transition: 0.2s;
+            font-weight: bold;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            background: #3b82f6;
+        }
+
+        .button.secondary {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            padding: 25px;
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            border-radius: 18px;
+            backdrop-filter: blur(10px);
+        }
+
+        .card-icon {
+            font-size: 30px;
+            margin-bottom: 15px;
+        }
+
+        .card h3 {
+            margin-bottom: 8px;
+            font-size: 18px;
+        }
+
+        .card p {
+            color: #94a3b8;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .pipeline {
+            padding: 30px;
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            border-radius: 18px;
+            margin-bottom: 40px;
+        }
+
+        .pipeline h2 {
+            margin-bottom: 25px;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+        }
+
+        .step {
+            text-align: center;
+            padding: 15px 8px;
+            border-radius: 12px;
+            background: rgba(34, 197, 94, 0.08);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .step-number {
+            color: #4ade80;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        .step-name {
+            color: #cbd5e1;
+            font-size: 12px;
+        }
+
+        .info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .info-box {
+            padding: 25px;
+            border-radius: 18px;
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+        }
+
+        .info-box h3 {
+            margin-bottom: 15px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(148,163,184,0.1);
+            color: #94a3b8;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .value {
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        footer {
+            text-align: center;
+            color: #64748b;
+            padding: 30px 0;
+            font-size: 14px;
+        }
+
+        @media (max-width: 800px) {
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            .steps {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .info {
+                grid-template-columns: 1fr;
+            }
+
+            .navbar {
+                margin-bottom: 40px;
+            }
+        }
+    </style>
 </head>
-
 
 <body>
 
-
-<nav>
-
-<div class="nav-container">
-
-<div class="logo">
-ND.
-</div>
-
-<ul class="nav-links">
-
-<li>
-<a href="#about">About</a>
-</li>
-
-<li>
-<a href="#skills">Skills</a>
-</li>
-
-<li>
-<a href="#projects">Projects</a>
-</li>
-
-<li>
-<a href="#pipeline">CI/CD</a>
-</li>
-
-<li>
-<a href="#contact">Contact</a>
-</li>
-
-</ul>
-
-</div>
-
-</nav>
-
-
-<section class="hero">
-
-<div class="container hero-content">
-
-<div class="version">
-PORTFOLIO VERSION 2.0
-</div>
-
-<h1>
-Nitishkumar
-<span>Dharmendran</span>
-</h1>
-
-<h2>
-${portfolio.role}
-</h2>
-
-<p>
-${portfolio.introduction}
-</p>
-
-<div class="buttons">
-
-<a
-    class="button primary"
-    href="#projects"
->
-View Projects
-</a>
-
-<a
-    class="button secondary"
-    href="#contact"
->
-Contact Me
-</a>
-
-</div>
-
-</div>
-
-</section>
-
-
-<section id="about">
-
 <div class="container">
 
-<h2 class="section-title">
-About Me
-</h2>
+    <nav class="navbar">
+        <div class="logo">
+            <span>◆</span> Node.js DevOps
+        </div>
 
-<p class="section-description">
-Cloud and DevOps focused engineer
-</p>
+        <div class="status">
+            <span class="dot"></span>
+            System Online
+        </div>
+    </nav>
 
+    <section class="hero">
 
-<div class="about-grid">
+        <div class="badge">
+            🚀 CI/CD Pipeline Successfully Deployed
+        </div>
 
-<div class="about-card">
+        <h1>
+            Node.js DevOps<br>
+            CI/CD Project
+        </h1>
 
-<h3>
-AWS Cloud
-</h3>
+        <p class="subtitle">
+            A containerized Node.js application automatically tested,
+            built, pushed to Docker Hub and deployed through Jenkins.
+        </p>
 
-<p>
-Working with AWS services and cloud infrastructure,
-including compute, storage, networking, identity,
-monitoring and deployment services.
-</p>
+        <div class="buttons">
+            <a class="button" href="/health">
+                Health Check
+            </a>
+
+            <a class="button secondary" href="/api/status">
+                API Status
+            </a>
+        </div>
+
+    </section>
+
+    <section class="cards">
+
+        <div class="card">
+            <div class="card-icon">⚙️</div>
+            <h3>Jenkins</h3>
+            <p>
+                Automated CI/CD pipeline handles testing,
+                Docker image creation and deployment.
+            </p>
+        </div>
+
+        <div class="card">
+            <div class="card-icon">🐳</div>
+            <h3>Docker</h3>
+            <p>
+                Application is packaged and executed inside
+                a lightweight Node.js Docker container.
+            </p>
+        </div>
+
+        <div class="card">
+            <div class="card-icon">☁️</div>
+            <h3>Docker Hub</h3>
+            <p>
+                Docker images are pushed to a Docker Hub
+                repository as part of the pipeline.
+            </p>
+        </div>
+
+    </section>
+
+    <section class="pipeline">
+
+        <h2>Deployment Pipeline</h2>
+
+        <div class="steps">
+
+            <div class="step">
+                <div class="step-number">01</div>
+                <div class="step-name">GitHub</div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">02</div>
+                <div class="step-name">Jenkins</div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">03</div>
+                <div class="step-name">Test</div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">04</div>
+                <div class="step-name">Docker Build</div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">05</div>
+                <div class="step-name">Docker Hub</div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">06</div>
+                <div class="step-name">Deploy</div>
+            </div>
+
+        </div>
+
+    </section>
+
+    <section class="info">
+
+        <div class="info-box">
+
+            <h3>Application Information</h3>
+
+            <div class="info-row">
+                <span>Runtime</span>
+                <span class="value">Node.js 22</span>
+            </div>
+
+            <div class="info-row">
+                <span>Framework</span>
+                <span class="value">Express</span>
+            </div>
+
+            <div class="info-row">
+                <span>Port</span>
+                <span class="value">${PORT}</span>
+            </div>
+
+            <div class="info-row">
+                <span>Environment</span>
+                <span class="value">Docker</span>
+            </div>
+
+        </div>
+
+        <div class="info-box">
+
+            <h3>Deployment Status</h3>
+
+            <div class="info-row">
+                <span>Application</span>
+                <span class="value">✓ Running</span>
+            </div>
+
+            <div class="info-row">
+                <span>Container</span>
+                <span class="value">✓ Healthy</span>
+            </div>
+
+            <div class="info-row">
+                <span>CI/CD</span>
+                <span class="value">✓ Automated</span>
+            </div>
+
+            <div class="info-row">
+                <span>Deployment</span>
+                <span class="value">✓ Successful</span>
+            </div>
+
+        </div>
+
+    </section>
+
+    <footer>
+        Node.js DevOps CI/CD Project • Built with Jenkins + Docker
+    </footer>
 
 </div>
-
-
-<div class="about-card">
-
-<h3>
-DevOps & CI/CD
-</h3>
-
-<p>
-Building automated workflows using GitHub, Jenkins,
-Docker and Docker Compose to test, build and deploy
-applications automatically.
-</p>
-
-</div>
-
-
-<div class="about-card">
-
-<h3>
-Continuous Learning
-</h3>
-
-<p>
-Continuously developing skills in cloud engineering,
-containerization, automation, Infrastructure as Code
-and production deployment practices.
-</p>
-
-</div>
-
-</div>
-
-</div>
-
-</section>
-
-
-<section id="skills">
-
-<div class="container">
-
-<h2 class="section-title">
-Technical Skills
-</h2>
-
-<p class="section-description">
-Tools and technologies
-</p>
-
-
-<div class="skills-grid">
-
-${skillSections}
-
-</div>
-
-</div>
-
-</section>
-
-
-<section id="projects">
-
-<div class="container">
-
-<h2 class="section-title">
-Projects
-</h2>
-
-<p class="section-description">
-Hands-on cloud and DevOps projects
-</p>
-
-
-<div class="project-grid">
-
-${projectCards}
-
-</div>
-
-</div>
-
-</section>
-
-
-<section id="pipeline">
-
-<div class="container">
-
-<h2 class="section-title">
-CI/CD Pipeline
-</h2>
-
-<p class="section-description">
-This portfolio is deployed through an automated
-GitHub → Jenkins → Docker workflow.
-</p>
-
-
-<div class="pipeline">
-
-${pipelineSteps}
-
-</div>
-
-</div>
-
-</section>
-
-
-<section>
-
-<div class="container">
-
-<h2 class="section-title">
-Certification
-</h2>
-
-<p class="section-description">
-Professional certification
-</p>
-
-
-<div class="certification-card">
-
-<h3>
-${portfolio.certification}
-</h3>
-
-<p>
-Cloud fundamentals, AWS services,
-security, architecture, pricing and
-cloud technology concepts.
-</p>
-
-</div>
-
-</div>
-
-</section>
-
-
-<section id="contact" class="contact">
-
-<div class="container">
-
-<h2 class="section-title">
-Let's Connect
-</h2>
-
-<p class="section-description">
-Open to opportunities in Cloud and DevOps.
-</p>
-
-
-<div class="contact-box">
-
-<p>
-${portfolio.location}
-</p>
-
-<div class="buttons">
-
-<a
-    class="button primary"
-    href="https://github.com/nitishkumar-IT"
-    target="_blank"
->
-GitHub
-</a>
-
-<a
-    class="button secondary"
-    href="https://www.linkedin.com"
-    target="_blank"
->
-LinkedIn
-</a>
-
-</div>
-
-</div>
-
-</div>
-
-</section>
-
-
-<footer>
-
-© ${new Date().getFullYear()}
-${portfolio.name}
-
-<br>
-
-Node.js • Express • Docker • Jenkins • AWS • CI/CD
-
-</footer>
-
 
 </body>
-
 </html>
-
     `);
-
 });
 
-
-/* ==========================================
-   404
-========================================== */
-
-app.use((req, res) => {
-
-    res.status(404).json({
-        error: "Route not found",
-        path: req.path
+app.get("/health", (req, res) => {
+    res.status(200).json({
+        status: "UP",
+        application: "Node.js DevOps CI/CD",
+        version: "2.0.0",
+        uptime: process.uptime(),
+        startedAt: startTime.toISOString(),
+        timestamp: new Date().toISOString()
     });
-
 });
 
-
-/* ==========================================
-   START SERVER
-========================================== */
-
-app.listen(PORT, () => {
-
-    console.log(
-        'Server running on port ${PORT}'
-    );
-
+app.get("/api/status", (req, res) => {
+    res.json({
+        application: "Node.js DevOps CI/CD Project",
+        status: "running",
+        environment: "Docker",
+        nodeVersion: process.version,
+        port: PORT,
+        uptime: `${Math.floor(process.uptime())} seconds`
+    });
 });
 
-
-module.exports = app;
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Node.js application running on port ${PORT}`);
+});
