@@ -5,7 +5,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(express.json());
-res.send("Hello from Node.js CI/CD v2!");
+
 const portfolio = {
     name: "Nitishkumar Dharmendran",
     role: "AWS Cloud & DevOps Engineer",
