@@ -3,8 +3,8 @@ pipeline {
 
     environment {
         DOCKER_PATH = 'C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
-        COMPOSE_PATH = 'C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker-compose.exe'
         DOCKER_IMAGE = 'nitishkumar102001/nodejs-devops-cicd-project'
+        EC2_HOST = '15.206.84.205'
     }
 
     stages {
@@ -86,10 +86,22 @@ pipeline {
             }
         }
 
-        stage('Deploy with Docker Compose') {
+        stage('Deploy to EC2') {
             steps {
-                bat '"%COMPOSE_PATH%" down'
-                bat '"%COMPOSE_PATH%" up -d'
+                sshagent(['ec2-ssh-key']) {
+                    bat '''
+                        echo Connecting to EC2...
+
+                        ssh -o StrictHostKeyChecking=no ubuntu@%EC2_HOST% "docker pull %DOCKER_IMAGE%:latest && docker stop nodejs-devops-container || true && docker rm nodejs-devops-container || true && docker run -d --name nodejs-devops-container -p 3001:3001 %DOCKER_IMAGE%:latest"
+
+                        if errorlevel 1 (
+                            echo EC2 deployment failed.
+                            exit /b 1
+                        )
+
+                        echo EC2 deployment successful.
+                    '''
+                }
             }
         }
     }
