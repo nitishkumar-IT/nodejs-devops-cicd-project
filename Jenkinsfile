@@ -86,46 +86,95 @@ pipeline {
             }
         }
 
-        stage('Deploy to EC2') {
-    steps {
-        withCredentials([
-            file(
-                credentialsId: 'ec2-key-file',
-                variable: 'EC2_KEY'
-            )
-        ]) {
-            bat '''
-                echo Preparing EC2 SSH key...
+        stage('Deploy to Local Docker') {
+            steps {
+                bat '''
+                    echo ==============================
+                    echo Deploying to Local Docker
+                    echo ==============================
 
-                set "TEMP_KEY=%WORKSPACE%\\ec2-deploy-key.pem"
+                    echo Pulling latest image...
 
-                copy /Y "%EC2_KEY%" "%TEMP_KEY%" >nul
+                    "%DOCKER_PATH%" pull %DOCKER_IMAGE%:latest
 
-                icacls "%TEMP_KEY%" /inheritance:r
-                icacls "%TEMP_KEY%" /grant:r "%USERNAME%:R"
+                    if errorlevel 1 (
+                        echo Docker image pull failed.
+                        exit /b 1
+                    )
 
-                echo Connecting to EC2...
+                    echo Stopping existing local container...
 
-                ssh -i "%TEMP_KEY%" -o StrictHostKeyChecking=no ubuntu@%EC2_HOST% "docker pull %DOCKER_IMAGE%:latest && docker stop nodejs-devops-container || true && docker rm nodejs-devops-container || true && docker run -d --name nodejs-devops-container -p 3001:3001 %DOCKER_IMAGE%:latest"
+                    "%DOCKER_PATH%" stop nodejs-devops-container 2>nul
 
-                if errorlevel 1 (
-                    echo EC2 deployment failed.
-                    del /Q "%TEMP_KEY%" >nul 2>&1
-                    exit /b 1
-                )
+                    echo Removing existing local container...
 
-                echo EC2 deployment successful.
+                    "%DOCKER_PATH%" rm nodejs-devops-container 2>nul
 
-                del /Q "%TEMP_KEY%" >nul 2>&1
-            '''
+                    echo Starting new local container...
+
+                    "%DOCKER_PATH%" run -d --name nodejs-devops-container -p 3001:3001 %DOCKER_IMAGE%:latest
+
+                    if errorlevel 1 (
+                        echo Local Docker deployment failed.
+                        exit /b 1
+                    )
+
+                    echo Local Docker deployment successful.
+                    echo Application: http://localhost:3001
+                '''
+            }
         }
-    }
-}
+
+        stage('Deploy to EC2') {
+            steps {
+                withCredentials([
+                    file(
+                        credentialsId: 'ec2-key-file',
+                        variable: 'EC2_KEY'
+                    )
+                ]) {
+
+                    bat '''
+                        echo ==============================
+                        echo Deploying to AWS EC2
+                        echo ==============================
+
+                        echo Preparing EC2 SSH key...
+
+                        set "TEMP_KEY=%WORKSPACE%\\ec2-deploy-key.pem"
+
+                        copy /Y "%EC2_KEY%" "%TEMP_KEY%" >nul
+
+                        icacls "%TEMP_KEY%" /inheritance:r
+
+                        icacls "%TEMP_KEY%" /grant:r "%USERNAME%:R"
+
+                        echo Connecting to EC2...
+
+                        ssh -i "%TEMP_KEY%" -o StrictHostKeyChecking=no ubuntu@%EC2_HOST% "docker pull %DOCKER_IMAGE%:latest && docker stop nodejs-devops-container || true && docker rm nodejs-devops-container || true && docker run -d --name nodejs-devops-container -p 3001:3001 %DOCKER_IMAGE%:latest"
+
+                        if errorlevel 1 (
+                            echo EC2 deployment failed.
+                            del /Q "%TEMP_KEY%" >nul 2>&1
+                            exit /b 1
+                        )
+
+                        echo EC2 deployment successful.
+                        echo Application: http://%EC2_HOST%:3001
+
+                        del /Q "%TEMP_KEY%" >nul 2>&1
+                    '''
+                }
+            }
+        }
     }
 
     post {
+
         success {
             echo 'Node.js CI/CD pipeline completed successfully!'
+            echo 'Local: http://localhost:3001'
+            echo 'EC2: http://15.206.84.205:3001'
         }
 
         failure {
@@ -134,6 +183,7 @@ pipeline {
 
         always {
             bat 'if exist "%WORKSPACE%\\docker_pass.txt" del "%WORKSPACE%\\docker_pass.txt"'
+            bat 'if exist "%WORKSPACE%\\ec2-deploy-key.pem" del "%WORKSPACE%\\ec2-deploy-key.pem"'
         }
     }
 }

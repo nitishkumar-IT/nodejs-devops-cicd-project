@@ -291,7 +291,7 @@ app.get("/", (req, res) => {
     <section class="hero">
 
         <div class="badge">
-            🚀 CI/CD Pipeline Successfully Deployed
+            🚀 CI/CD Pipeline Successfully Deployed in EC2
         </div>
 
         <h1> 
