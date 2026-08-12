@@ -87,23 +87,28 @@ pipeline {
         }
 
         stage('Deploy to EC2') {
-            steps {
-                sshagent(['ec2-ssh-key']) {
-                    bat '''
-                        echo Connecting to EC2...
+    steps {
+        withCredentials([
+            file(
+                credentialsId: 'ec2-key-file',
+                variable: 'EC2_KEY'
+            )
+        ]) {
+            bat '''
+                echo Connecting to EC2...
 
-                        ssh -o StrictHostKeyChecking=no ubuntu@%EC2_HOST% "docker pull %DOCKER_IMAGE%:latest && docker stop nodejs-devops-container || true && docker rm nodejs-devops-container || true && docker run -d --name nodejs-devops-container -p 3001:3001 %DOCKER_IMAGE%:latest"
+                ssh -i "%EC2_KEY%" -o StrictHostKeyChecking=no ubuntu@%EC2_HOST% "docker pull %DOCKER_IMAGE%:latest && docker stop nodejs-devops-container || true && docker rm nodejs-devops-container || true && docker run -d --name nodejs-devops-container -p 3001:3001 %DOCKER_IMAGE%:latest"
 
-                        if errorlevel 1 (
-                            echo EC2 deployment failed.
-                            exit /b 1
-                        )
+                if errorlevel 1 (
+                    echo EC2 deployment failed.
+                    exit /b 1
+                )
 
-                        echo EC2 deployment successful.
-                    '''
-                }
-            }
+                echo EC2 deployment successful.
+            '''
         }
+    }
+}
     }
 
     post {
