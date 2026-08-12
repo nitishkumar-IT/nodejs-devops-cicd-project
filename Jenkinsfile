@@ -95,16 +95,28 @@ pipeline {
             )
         ]) {
             bat '''
+                echo Preparing EC2 SSH key...
+
+                set "TEMP_KEY=%WORKSPACE%\\ec2-deploy-key.pem"
+
+                copy /Y "%EC2_KEY%" "%TEMP_KEY%" >nul
+
+                icacls "%TEMP_KEY%" /inheritance:r
+                icacls "%TEMP_KEY%" /grant:r "%USERNAME%:R"
+
                 echo Connecting to EC2...
 
-                ssh -i "%EC2_KEY%" -o StrictHostKeyChecking=no ubuntu@%EC2_HOST% "docker pull %DOCKER_IMAGE%:latest && docker stop nodejs-devops-container || true && docker rm nodejs-devops-container || true && docker run -d --name nodejs-devops-container -p 3001:3001 %DOCKER_IMAGE%:latest"
+                ssh -i "%TEMP_KEY%" -o StrictHostKeyChecking=no ubuntu@%EC2_HOST% "docker pull %DOCKER_IMAGE%:latest && docker stop nodejs-devops-container || true && docker rm nodejs-devops-container || true && docker run -d --name nodejs-devops-container -p 3001:3001 %DOCKER_IMAGE%:latest"
 
                 if errorlevel 1 (
                     echo EC2 deployment failed.
+                    del /Q "%TEMP_KEY%" >nul 2>&1
                     exit /b 1
                 )
 
                 echo EC2 deployment successful.
+
+                del /Q "%TEMP_KEY%" >nul 2>&1
             '''
         }
     }
