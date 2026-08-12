@@ -294,11 +294,11 @@ app.get("/", (req, res) => {
             🚀 CI/CD Pipeline Successfully Deployed
         </div>
 
-        <h1> Nitishkumar Dharmendran
+        <h1> 
             Node.js DevOps<br>
             CI/CD Project
         </h1>
-
+        <h5>Nitishkumar Dharmendran</h5
         <p class="subtitle">
             A containerized Node.js application automatically tested,
             built, pushed to Docker Hub and deployed through Jenkins.
