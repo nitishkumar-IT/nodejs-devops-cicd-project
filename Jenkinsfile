@@ -107,7 +107,7 @@ pipeline {
                         )
 
                         echo Multi-platform Docker image built and pushed successfully.
-                    '''
+                        '''
                 }
             }
         }
