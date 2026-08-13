@@ -5,6 +5,7 @@ pipeline {
         DOCKER_PATH = 'C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
         COMPOSE_PATH = 'C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker-compose.exe'
         DOCKER_IMAGE = 'nitishkumar102001/nodejs-devops-cicd-project'
+        BUILDER_NAME = 'multiarch-builder'
     }
 
     stages {
@@ -27,7 +28,7 @@ pipeline {
             }
         }
 
-        stage('Build and Push Multi-Platform Docker Image') {
+        stage('Docker Hub Login') {
             steps {
 
                 withCredentials([
@@ -40,7 +41,7 @@ pipeline {
 
                     bat '''
                         echo ========================================
-                        echo Logging in to Docker Hub
+                        echo Docker Hub Login
                         echo ========================================
 
                         echo %DOCKER_PASSWORD% | "%DOCKER_PATH%" login --username %DOCKER_USERNAME% --password-stdin
@@ -51,64 +52,96 @@ pipeline {
                         )
 
                         echo Docker Hub login successful.
-
-
-                        echo ========================================
-                        echo Checking Docker Buildx
-                        echo ========================================
-
-                        "%DOCKER_PATH%" buildx version
-
-                        if errorlevel 1 (
-                            echo Docker Buildx is not available.
-                            exit /b 1
-                        )
-
-
-                        echo ========================================
-                        echo Setting up Multi-Platform Builder
-                        echo ========================================
-
-                        "%DOCKER_PATH%" buildx inspect multiarch-builder >nul 2>&1
-
-                        if errorlevel 1 (
-                            echo Creating multiarch-builder...
-                            "%DOCKER_PATH%" buildx create --name multiarch-builder --driver docker-container --use
-                        ) else (
-                            echo multiarch-builder already exists.
-                            "%DOCKER_PATH%" buildx use multiarch-builder
-                        )
-
-
-                        echo ========================================
-                        echo Bootstrapping Buildx
-                        echo ========================================
-
-                        "%DOCKER_PATH%" buildx inspect --bootstrap
-
-                        if errorlevel 1 (
-                            echo Buildx bootstrap failed.
-                            exit /b 1
-                        )
-
-
-                        echo ========================================
-                        echo Building AMD64 + ARM64 Docker Image
-                        echo ========================================
-
-                        "%DOCKER_PATH%" buildx build ^
-                            --platform linux/amd64,linux/arm64 ^
-                            -t %DOCKER_IMAGE%:latest ^
-                            --push .
-
-                        if errorlevel 1 (
-                            echo Multi-platform Docker build failed.
-                            exit /b 1
-                        )
-
-                        echo Multi-platform Docker image built and pushed successfully.
-                        '''
+                    '''
                 }
+            }
+        }
+
+        stage('Setup Docker Buildx') {
+            steps {
+
+                bat '''
+                    echo ========================================
+                    echo Checking Docker Buildx
+                    echo ========================================
+
+                    "%DOCKER_PATH%" buildx version
+
+                    if errorlevel 1 (
+                        echo Docker Buildx is not available.
+                        exit /b 1
+                    )
+
+
+                    echo ========================================
+                    echo Creating Buildx Builder
+                    echo ========================================
+
+                    "%DOCKER_PATH%" buildx inspect %BUILDER_NAME% >nul 2>&1
+
+                    if errorlevel 1 (
+                        echo Creating new builder...
+                        "%DOCKER_PATH%" buildx create --name %BUILDER_NAME% --driver docker-container --use
+                    ) else (
+                        echo Builder already exists.
+                        "%DOCKER_PATH%" buildx use %BUILDER_NAME%
+                    )
+
+
+                    echo ========================================
+                    echo Bootstrapping Builder
+                    echo ========================================
+
+                    "%DOCKER_PATH%" buildx inspect --bootstrap
+
+                    if errorlevel 1 (
+                        echo Buildx bootstrap failed.
+                        exit /b 1
+                    )
+                '''
+            }
+        }
+
+        stage('Build Multi-Platform Image') {
+            steps {
+
+                bat '''
+                    echo ========================================
+                    echo Building AMD64 + ARM64 Image
+                    echo ========================================
+
+                    "%DOCKER_PATH%" buildx build ^
+                        --platform linux/amd64,linux/arm64 ^
+                        -t %DOCKER_IMAGE%:latest ^
+                        --push .
+
+                    if errorlevel 1 (
+                        echo Multi-platform Docker build failed.
+                        exit /b 1
+                    )
+
+                    echo ========================================
+                    echo Multi-platform Image Successfully Pushed
+                    echo ========================================
+                '''
+            }
+        }
+
+        stage('Verify Image Platforms') {
+            steps {
+
+                bat '''
+                    echo ========================================
+                    echo Checking Docker Hub Image Platforms
+                    echo ========================================
+
+                    "%DOCKER_PATH%" buildx imagetools inspect %DOCKER_IMAGE%:latest
+
+                    if errorlevel 1 (
+                        echo Image inspection failed.
+                        exit /b 1
+                    )
+                '''
             }
         }
 
@@ -117,7 +150,7 @@ pipeline {
 
                 bat '''
                     echo ========================================
-                    echo Pulling Latest Docker Image
+                    echo Pulling Latest Image
                     echo ========================================
 
                     "%DOCKER_PATH%" pull %DOCKER_IMAGE%:latest
@@ -153,7 +186,7 @@ pipeline {
 
         /*
         ============================================================
-        EC2 DEPLOYMENT TEMPORARILY DISABLED
+        EC2 DEPLOYMENT DISABLED
         ============================================================
 
         stage('Deploy to EC2') {
@@ -186,7 +219,7 @@ pipeline {
         }
 
         ============================================================
-        END OF EC2 DEPLOYMENT
+        END EC2
         ============================================================
         */
 
@@ -195,7 +228,7 @@ pipeline {
     post {
 
         success {
-            echo 'Node.js CI/CD pipeline completed successfully!'
+            echo 'Node.js multi-platform CI/CD pipeline completed successfully!'
         }
 
         failure {
