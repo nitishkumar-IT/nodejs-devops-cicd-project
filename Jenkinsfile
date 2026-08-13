@@ -147,9 +147,9 @@ pipeline {
         }
 
         stage('Deploy with Docker Compose') {
-    steps {
+            steps {
 
-        bat '''
+            bat '''
             echo ========================================
             echo Pulling Latest Docker Image...
             echo ========================================
