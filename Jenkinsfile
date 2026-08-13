@@ -3,8 +3,8 @@ pipeline {
 
     environment {
         DOCKER_PATH = 'C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
+        COMPOSE_PATH = 'C:\\Users\\NITISHKUMAR\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker-compose.exe'
         DOCKER_IMAGE = 'nitishkumar102001/nodejs-devops-cicd-project'
-        EC2_HOST = '15.206.84.205'
     }
 
     stages {
@@ -27,14 +27,9 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build and Push Multi-Platform Docker Image') {
             steps {
-                bat '"%DOCKER_PATH%" build -t nodejs-devops-cicd-project:latest .'
-            }
-        }
 
-        stage('Push to Docker Hub') {
-            steps {
                 withCredentials([
                     usernamePassword(
                         credentialsId: 'dockerhub-pat-test',
@@ -44,56 +39,86 @@ pipeline {
                 ]) {
 
                     bat '''
-                        echo Logging in to Docker Hub...
+                        echo ========================================
+                        echo Logging in to Docker Hub
+                        echo ========================================
 
-                        powershell -NoProfile -Command "[System.IO.File]::WriteAllText('%WORKSPACE%\\docker_pass.txt', $env:DOCKER_PASSWORD)"
-
-                        type "%WORKSPACE%\\docker_pass.txt" | "%DOCKER_PATH%" login --username %DOCKER_USERNAME% --password-stdin
+                        echo %DOCKER_PASSWORD% | "%DOCKER_PATH%" login --username %DOCKER_USERNAME% --password-stdin
 
                         if errorlevel 1 (
-                            del "%WORKSPACE%\\docker_pass.txt"
                             echo Docker Hub login failed.
                             exit /b 1
                         )
 
-                        del "%WORKSPACE%\\docker_pass.txt"
-
                         echo Docker Hub login successful.
 
-                        echo Tagging Docker image...
 
-                        "%DOCKER_PATH%" tag nodejs-devops-cicd-project:latest %DOCKER_IMAGE%:latest
+                        echo ========================================
+                        echo Checking Docker Buildx
+                        echo ========================================
+
+                        "%DOCKER_PATH%" buildx version
 
                         if errorlevel 1 (
-                            echo Docker image tagging failed.
+                            echo Docker Buildx is not available.
                             exit /b 1
                         )
 
-                        echo Docker image tagged successfully.
 
-                        echo Pushing Docker image to Docker Hub...
+                        echo ========================================
+                        echo Setting up Multi-Platform Builder
+                        echo ========================================
 
-                        "%DOCKER_PATH%" push %DOCKER_IMAGE%:latest
+                        "%DOCKER_PATH%" buildx inspect multiarch-builder >nul 2>&1
 
                         if errorlevel 1 (
-                            echo Docker image push failed.
+                            echo Creating multiarch-builder...
+                            "%DOCKER_PATH%" buildx create --name multiarch-builder --driver docker-container --use
+                        ) else (
+                            echo multiarch-builder already exists.
+                            "%DOCKER_PATH%" buildx use multiarch-builder
+                        )
+
+
+                        echo ========================================
+                        echo Bootstrapping Buildx
+                        echo ========================================
+
+                        "%DOCKER_PATH%" buildx inspect --bootstrap
+
+                        if errorlevel 1 (
+                            echo Buildx bootstrap failed.
                             exit /b 1
                         )
 
-                        echo Docker image pushed successfully.
+
+                        echo ========================================
+                        echo Building AMD64 + ARM64 Docker Image
+                        echo ========================================
+
+                        "%DOCKER_PATH%" buildx build ^
+                            --platform linux/amd64,linux/arm64 ^
+                            -t %DOCKER_IMAGE%:latest ^
+                            --push .
+
+                        if errorlevel 1 (
+                            echo Multi-platform Docker build failed.
+                            exit /b 1
+                        )
+
+                        echo Multi-platform Docker image built and pushed successfully.
                     '''
                 }
             }
         }
 
-        stage('Deploy to Local Docker') {
+        stage('Deploy with Docker Compose') {
             steps {
-                bat '''
-                    echo ==============================
-                    echo Deploying to Local Docker
-                    echo ==============================
 
-                    echo Pulling latest image...
+                bat '''
+                    echo ========================================
+                    echo Pulling Latest Docker Image
+                    echo ========================================
 
                     "%DOCKER_PATH%" pull %DOCKER_IMAGE%:latest
 
@@ -102,31 +127,38 @@ pipeline {
                         exit /b 1
                     )
 
-                    echo Stopping existing local container...
 
-                    "%DOCKER_PATH%" stop nodejs-devops-container 2>nul
+                    echo ========================================
+                    echo Stopping Existing Containers
+                    echo ========================================
 
-                    echo Removing existing local container...
+                    "%COMPOSE_PATH%" down
 
-                    "%DOCKER_PATH%" rm nodejs-devops-container 2>nul
 
-                    echo Starting new local container...
+                    echo ========================================
+                    echo Starting Docker Compose
+                    echo ========================================
 
-                    "%DOCKER_PATH%" run -d --name nodejs-devops-container -p 3001:3001 %DOCKER_IMAGE%:latest
+                    "%COMPOSE_PATH%" up -d
 
                     if errorlevel 1 (
-                        echo Local Docker deployment failed.
+                        echo Docker Compose deployment failed.
                         exit /b 1
                     )
 
-                    echo Local Docker deployment successful.
-                    echo Application: http://localhost:3001
+                    echo Docker Compose deployment successful.
                 '''
             }
         }
 
+        /*
+        ============================================================
+        EC2 DEPLOYMENT TEMPORARILY DISABLED
+        ============================================================
+
         stage('Deploy to EC2') {
             steps {
+
                 withCredentials([
                     file(
                         credentialsId: 'ec2-key-file',
@@ -135,46 +167,35 @@ pipeline {
                 ]) {
 
                     bat '''
-                        echo ==============================
-                        echo Deploying to AWS EC2
-                        echo ==============================
-
-                        echo Preparing EC2 SSH key...
-
-                        set "TEMP_KEY=%WORKSPACE%\\ec2-deploy-key.pem"
-
-                        copy /Y "%EC2_KEY%" "%TEMP_KEY%" >nul
-
-                        icacls "%TEMP_KEY%" /inheritance:r
-
-                        icacls "%TEMP_KEY%" /grant:r "%USERNAME%:R"
-
                         echo Connecting to EC2...
 
-                        ssh -i "%TEMP_KEY%" -o StrictHostKeyChecking=no ubuntu@%EC2_HOST% "docker pull %DOCKER_IMAGE%:latest && docker stop nodejs-devops-container || true && docker rm nodejs-devops-container || true && docker run -d --name nodejs-devops-container -p 3001:3001 %DOCKER_IMAGE%:latest"
+                        ssh -i "%EC2_KEY%" ^
+                            -o StrictHostKeyChecking=no ^
+                            ubuntu@15.206.84.205 ^
+                            "docker pull nitishkumar102001/nodejs-devops-cicd-project:latest && docker stop nodejs-devops-container || true && docker rm nodejs-devops-container || true && docker run -d --name nodejs-devops-container -p 3001:3001 nitishkumar102001/nodejs-devops-cicd-project:latest"
 
                         if errorlevel 1 (
                             echo EC2 deployment failed.
-                            del /Q "%TEMP_KEY%" >nul 2>&1
                             exit /b 1
                         )
 
                         echo EC2 deployment successful.
-                        echo Application: http://%EC2_HOST%:3001
-
-                        del /Q "%TEMP_KEY%" >nul 2>&1
                     '''
                 }
             }
         }
+
+        ============================================================
+        END OF EC2 DEPLOYMENT
+        ============================================================
+        */
+
     }
 
     post {
 
         success {
             echo 'Node.js CI/CD pipeline completed successfully!'
-            echo 'Local: http://localhost:3001'
-            echo 'EC2: http://15.206.84.205:3001'
         }
 
         failure {
@@ -182,8 +203,12 @@ pipeline {
         }
 
         always {
-            bat 'if exist "%WORKSPACE%\\docker_pass.txt" del "%WORKSPACE%\\docker_pass.txt"'
-            bat 'if exist "%WORKSPACE%\\ec2-deploy-key.pem" del "%WORKSPACE%\\ec2-deploy-key.pem"'
+
+            bat '''
+                if exist "%WORKSPACE%\\docker_pass.txt" (
+                    del "%WORKSPACE%\\docker_pass.txt"
+                )
+            '''
         }
     }
 }
