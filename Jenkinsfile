@@ -147,45 +147,52 @@ pipeline {
         }
 
         stage('Deploy with Docker Compose') {
-            steps {
+    steps {
 
-                bat '''
-                    echo ========================================
-                    echo Pulling Latest Docker Image...
-                    echo ========================================
+        bat '''
+            echo ========================================
+            echo Pulling Latest Docker Image...
+            echo ========================================
 
-                    "%DOCKER_PATH%" pull %DOCKER_IMAGE%:latest
+            "%DOCKER_PATH%" pull %DOCKER_IMAGE%:latest
 
-                    if errorlevel 1 (
-                        echo Docker image pull failed.
-                        exit /b 1
-                    )
-
-
-                    echo ========================================
-                    echo Stopping Existing Containers...
-                    echo ========================================
-
-                    "%COMPOSE_PATH%" down
+            if errorlevel 1 (
+                echo Docker image pull failed.
+                exit /b 1
+            )
 
 
-                    echo ========================================
-                    echo Starting Docker Compose...
-                    echo ========================================
+            echo ========================================
+            echo Stopping Docker Compose...
+            echo ========================================
 
-                    "%COMPOSE_PATH%" up -d
+            "%COMPOSE_PATH%" down
 
-                    if errorlevel 1 (
-                        echo Docker Compose deployment failed.
-                        exit /b 1
-                    )
 
-                    echo ========================================
-                    echo Docker Compose deployment successful.
-                    echo ========================================
-                '''
-            }
-        }
+            echo ========================================
+            echo Removing Existing Container...
+            echo ========================================
+
+            "%DOCKER_PATH%" rm -f nodejs-devops-container 2>nul
+
+
+            echo ========================================
+            echo Starting Docker Compose...
+            echo ========================================
+
+            "%COMPOSE_PATH%" up -d
+
+            if errorlevel 1 (
+                echo Docker Compose deployment failed.
+                exit /b 1
+            )
+
+            echo ========================================
+            echo Docker Compose deployment successful.
+            echo ========================================
+        '''
+    }
+}
 
         /*
         ============================================================
